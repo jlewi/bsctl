@@ -1,12 +1,54 @@
-# bsctl
+# bsctl - A CLI to build collaborative feeds for Bluesky
 
-bluesky web CLI client written in Go.
+The purpose of bsctl is to foster micro-communities on Bluesky by making it easy 
+for communities to collaboratively create and manage feeds that
+discover and rank posts relevant to their communities.
 
-bsctl started as a way to enable people to collaborate on starter packs.
-bsctl makes it easy to follow all the accounts listed in a YAML file in GitHub such as
-[https://github.com/jlewi/bskylists/blob/main/platformengineering.yaml](https://github.com/jlewi/bskylists/blob/main/platformengineering.yaml).
+bsctl makes it easy to define feeds in GitHub so that communities can
+leverage GitHub for collaboration.
 
-# Sync The List
+## The Feed Algorithm
+
+The current feed algorithm is pretty simple.
+
+1. The feed retrieve the posts for all handles in a list
+   *  [PlatformEngineering List](https://bsky.app/profile/did:plc:5lwweotr4gfb7bbz2fqwdthf/lists/3l7yx65zcse25) is the list for  the [PlatformEngineering Feed](https://bsky.app/profile/jeremy.lewi.us/feed/platformeng)
+   * [AIEngineering List](https://bsky.app/profile/did:plc:5lwweotr4gfb7bbz2fqwdthf/lists/3l7z42fommh2l) is the list for the [AIEngineering Feed](https://bsky.app/profile/jeremy.lewi.us/feed/aieng)
+   * The source of truth for these lists is in GitHub
+1. We filter the posts down to only show posts that include a keyword
+   * These keywords are stored in GitHub
+
+## How to Collaborate On Feeds
+
+To collaborate on feeds we store the source of truth for both the list of handles and the keywords in GitHub.
+  * The source of truth for the [AIEngineering Feed](https://bsky.app/profile/jeremy.lewi.us/feed/aieng) and
+    [PlatformEngineering Feed](https://bsky.app/profile/jeremy.lewi.us/feed/platformeng) feeds is in https://github.com/jlewi/bskylists/
+
+bsctl provides a CLI to make it easy to 
+  1. Sync the list of handles from GitHub to a bluesky list
+  1. Dump the keywords so they can easily be copied into [Bluesky Feed Creator](https://blueskyfeedcreator.com/)
+    * [Bluesky Feed Creator](https://blueskyfeedcreator.com/) is what we currently use to create and serve the feeds
+
+
+There are two ways to collaborate and improve the algorithm
+
+1. Contribute a PR to update the list of handles or keywords
+1. Contribute code to bsctl to improve the algorithm programmatically.
+   * For an example checkout [jlewi/bsctl#6](https://github.com/jlewi/bsctl/issues/6)
+
+## How To Setup A New Feed
+
+1. Create a GitHub Repository and create two YAML files 
+   1. To define the list of handles
+   1. To define the keywords
+   * For an example checkout [jlewi/bskylists](https://github.com/jlewi/bskylists/)
+1. Use [Blusesky feed creator](https://blueskyfeedcreator.com/) to create the feed
+1. Use bsctl to sync the list of handles and keywords to Bluesky
+   * Note [jlewi/bsctl#7](https://github.com/jlewi/bsctl/issues/7) is a blocker to creating a new feed
+1. Use bsctl to dump the keywords to stdout and then copy and past them into [Bluesky Feed Creator](https://blueskyfeedcreator.com/)   
+
+
+## Commands For AIEngineering and PlatformEngineering
 
 ```bash {"id":"01JBTAGCHJ9H72SM46CHAPGPY3"}
 cd ~/git_bskylists
@@ -17,52 +59,6 @@ make build
 .build/bsctl apply ~/git_bskylists/aiengineering.yaml
 .build/bsctl apply ~/git_bskylists/platformengineering.yaml
 ```
-
-## Usage
-
-1. Open the webapp at [https://storage.googleapis.com/bsctl/index.html](https://storage.googleapis.com/bsctl/index.html)
-
-2. Set your handle by entering the following command
-
-```sh
-config set handle=<YOUR bluesky handle e.g. alice.bsky.social> 
-```
-
-* Click the "enter" button
-* Alternatively, you can press the enter key on your keyboard **twice**
-   * Having to press enter twice is known issue [bsctl/1](https://github.com/jlewi/bsctl/issues/1)
-
-3. Set your bluesky password by entering the following command
-
-```sh
-config set password=<YOUR bluesky password> 
-```
-
-* Click the "enter" button
-
-4. You can now run commands for example enter the following command to see your followers
-
-```text
-followers
-```
-
-5. To follow all the accounts listed in a YAML file such as [platformengineering.yaml](https://github.com/jlewi/bskylists/blob/main/platformengineering.yaml)
-
-```sh
-follow https://raw.githubusercontent.com/jlewi/bskylists/main/platformengineering.yaml
-```
-
-* **Important** The link should point at the raw version of the file
-
-## Why Not Just Use Bluesky Starter Packs
-
-As far as I can tell it doesn't seem possible to programmatically update starterpacks
-[thread](https://bsky.app/profile/eribeiro.bsky.social/post/3l7t6gnvyck2a).
-
-For the tech community, using Git/GitHub as a means to collaborate on starter packs seems like a natural fit.
-That requires moving the source of truth into git which requires a way to programmatically interact with Bluesky.
-While we can't programmatically update starter packs we can achieve a similar effect by making it easy to
-subscribe to a bunch of accounts in a list.
 
 ## License
 
