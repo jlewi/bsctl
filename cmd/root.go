@@ -24,6 +24,6 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(NewApplyCmd())
 	rootCmd.AddCommand(NewDumpCmd())
 	rootCmd.AddCommand(NewTidyCmd())
-
+	rootCmd.AddCommand(NewDumpStarterPack())
 	return rootCmd
 }
