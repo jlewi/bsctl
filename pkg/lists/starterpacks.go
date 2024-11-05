@@ -1,4 +1,4 @@
-package pkg
+package lists
 
 import (
 	"bytes"
@@ -11,7 +11,10 @@ import (
 	"github.com/jlewi/bsctl/pkg/api/v1alpha1"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 	"net/http"
+	"os"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"time"
 )
 
@@ -34,7 +37,7 @@ type StarterPack struct {
 	Creator            Creator   `json:"creator"`
 	JoinedAllTimeCount int       `json:"joinedAllTimeCount"`
 	JoinedWeekCount    int       `json:"joinedWeekCount"`
-	Labels             []string  `json:"labels"`
+	Labels             []Label   `json:"labels"`
 	IndexedAt          time.Time `json:"indexedAt"`
 	UpdatedAt          time.Time `json:"updatedAt"`
 }
@@ -75,7 +78,7 @@ type Creator struct {
 	Handle      string     `json:"handle"`
 	IndexedAt   time.Time  `json:"indexedAt"`
 	UpdatedAt   time.Time  `json:"updatedAt"`
-	Labels      []string   `json:"labels"`
+	Labels      []Label    `json:"labels"`
 	Viewer      Viewer     `json:"viewer"`
 }
 
@@ -87,11 +90,13 @@ type Feed struct {
 	DisplayName string    `json:"displayName"`
 	IndexedAt   time.Time `json:"indexedAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
-	Labels      []string  `json:"labels"`
+	Labels      []Label   `json:"labels"`
 	LikeCount   int       `json:"likeCount"`
 	URI         string    `json:"uri"`
 	Viewer      struct{}  `json:"viewer"`
 }
+
+type Label map[string]string
 
 type Feature struct {
 	Type string `json:"$type"`
@@ -126,11 +131,53 @@ func GetStarterPacks(client *xrpc.Client, actor string) (GetStarterPacks_Output,
 	}
 
 	if err := json.NewDecoder(&raw).Decode(&out); err != nil {
+		//var rawObj map[string]interface{}
+		//if err := json.Unmarshal(raw.Bytes(), &rawObj); err != nil {
+		//	return out, err
+		//}
+		fmt.Printf("Raw json:\n%s", raw.String())
+
 		log := zapr.NewLogger(zap.L())
 		log.Error(err, "Failed to decode JSON response", "response", raw.String())
 		return out, err
 	}
 	return out, nil
+}
+
+// MergeStarterPackToFile merges the users in a starter pack with the users in a file.
+func MergeStarterPackToFile(client *xrpc.Client, sourceFile string, handle string, startPackName string) error {
+	b, err := os.ReadFile(sourceFile)
+	if err != nil {
+		return errors.Wrapf(err, "cannot read file %s", sourceFile)
+	}
+
+	nodes, err := kio.FromBytes(b)
+	if err != nil {
+		return errors.Wrapf(err, "cannot read file %s", sourceFile)
+	}
+
+	node := nodes[0]
+	dest := &v1alpha1.AccountList{}
+	if err := node.YNode().Decode(dest); err != nil {
+		return errors.Wrapf(err, "cannot unmarshal AccountList from file %s", sourceFile)
+	}
+
+	output, err := DumpStarterPack(client, handle, startPackName)
+	if err != nil {
+		return err
+	}
+
+	MergeFollowLists(dest, *output)
+
+	outB, err := yaml.Marshal(dest)
+	if err != nil {
+		return errors.Wrapf(err, "cannot marshal AccountList to file %s", sourceFile)
+	}
+
+	if err := os.WriteFile(sourceFile, outB, 0644); err != nil {
+		return errors.Wrapf(err, "cannot write file %s", sourceFile)
+	}
+	return nil
 }
 
 // DumpStarterPack dumps all the users in a starter pack

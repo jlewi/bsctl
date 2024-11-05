@@ -1,17 +1,13 @@
-package pkg
+package e2etests
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/jlewi/bsctl/pkg/api/v1alpha1"
 	"github.com/jlewi/bsctl/pkg/lists"
 	"github.com/jlewi/bsctl/pkg/testutil"
 	"github.com/jlewi/monogo/helpers"
-	"github.com/pkg/errors"
-	"gopkg.in/yaml.v3"
 	"os"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 	"testing"
 )
 
@@ -33,7 +29,7 @@ func Test_GetStarterPackOutput(t *testing.T) {
 	}
 	fmt.Printf("jsonString:\n%s\n", helpers.PrettyString(unstructured))
 	b := bytes.NewBuffer([]byte(jsonString))
-	var out GetStarterPacks_Output
+	var out lists.GetStarterPacks_Output
 	d := json.NewDecoder(b)
 	d.DisallowUnknownFields()
 	if err := d.Decode(&out); err != nil {
@@ -55,7 +51,7 @@ func Test_GetStarterPacks(t *testing.T) {
 	// actor := "did:plc:umpsiyampiq3bpgce7kigydz"
 	actor := jeremyLewiDid
 
-	out, err := GetStarterPacks(stuff.Client, actor)
+	out, err := lists.GetStarterPacks(stuff.Client, actor)
 	if err != nil {
 		t.Fatalf("GetStarterPacks() = %v, wanted nil", err)
 	}
@@ -70,7 +66,7 @@ func Test_SyncStarterPackToFile(t *testing.T) {
 		t.Skipf("Test_StarterPacks is a manual test that is skipped in CICD")
 	}
 
-	stuff, err := testutil.testSetup()
+	stuff, err := testutil.New()
 	if err != nil {
 		t.Fatalf("testSetup() = %v, wanted nil", err)
 	}
@@ -86,40 +82,7 @@ func Test_SyncStarterPackToFile(t *testing.T) {
 	handle := "nimobeeren.com"
 	startPackName := "AI/ML/data frens starter pack"
 
-	err = func() error {
-		b, err := os.ReadFile(sourceFile)
-		if err != nil {
-			return errors.Wrapf(err, "cannot read file %s", sourceFile)
-		}
-
-		nodes, err := kio.FromBytes(b)
-		if err != nil {
-			return errors.Wrapf(err, "cannot read file %s", sourceFile)
-		}
-
-		node := nodes[0]
-		dest := &v1alpha1.AccountList{}
-		if err := node.YNode().Decode(dest); err != nil {
-			return errors.Wrapf(err, "cannot unmarshal AccountList from file %s", sourceFile)
-		}
-
-		output, err := DumpStarterPack(stuff.Client, handle, startPackName)
-		if err != nil {
-			return err
-		}
-
-		lists.MergeFollowLists(dest, *output)
-
-		outB, err := yaml.Marshal(dest)
-		if err != nil {
-			return errors.Wrapf(err, "cannot marshal AccountList to file %s", sourceFile)
-		}
-
-		if err := os.WriteFile(sourceFile, outB, 0644); err != nil {
-			return errors.Wrapf(err, "cannot write file %s", sourceFile)
-		}
-		return nil
-	}()
+	lists.MergeStarterPackToFile(stuff.Client, sourceFile, handle, startPackName)
 	if err != nil {
 		t.Fatalf("SyncStarterPackToFile Failed; error %+v", err)
 	}
