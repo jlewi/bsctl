@@ -9,10 +9,12 @@ import (
 	"github.com/jlewi/bsctl/pkg/config"
 	"github.com/jlewi/bsctl/pkg/controllers"
 	"github.com/jlewi/bsctl/pkg/lists"
+	"github.com/jlewi/bsctl/pkg/oai"
 	"github.com/jlewi/bsctl/pkg/util"
 	"github.com/jlewi/monogo/gcp/logging"
 	"github.com/jlewi/monogo/helpers"
 	"github.com/pkg/errors"
+	"github.com/sashabaranov/go-openai"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -116,6 +118,18 @@ func (a *App) SetupRegistry() error {
 		return err
 	}
 
+	oaiClient, err := a.GetOAIClient(context.Background())
+	if err != nil {
+		return errors.Wrapf(err, "Failed to create OAI client")
+	}
+	walker, err := lists.NewWalker(client, oaiClient)
+	if err != nil {
+		return err
+	}
+	if err := a.Registry.Register(v1alpha1.CommunityBuilderGVK, walker); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -169,6 +183,14 @@ func (a *App) TidyPaths(ctx context.Context, inPaths []string) error {
 	}
 
 	return nil
+}
+
+func (a *App) GetOAIClient(ctx context.Context) (*openai.Client, error) {
+	if a.Config == nil {
+		return nil, errors.WithStack(errors.New("app.Config is nil; call app.LoadConfig"))
+	}
+
+	return oai.NewClient(*a.Config)
 }
 
 func (a *App) apply(ctx context.Context, path string) error {

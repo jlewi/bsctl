@@ -1,0 +1,23 @@
+You will be given a short description of a person taken from their social media account.
+Decide whether the person belongs to the {{.Definition.Name}} community.
+
+Use the following criterion to decide if someone belongs to the community
+{{range .Definition.Criterion}}
+* {{.}}{{end}}
+
+Emit the result as a json dictionary with field member which is a boolean
+which should be true if the profile belongs and false otherwise.
+Also include a field explanation with a short explanation of your classification.
+{{if .Definition.Examples}}
+Here are a bunch of examples of input documents along with the expected output.
+{{range .Definition.Examples}}
+<example>
+<input>
+{{.Profile}}
+</input>
+<output>
+{ "member": {{.Member}}, "explanation": "{{.Explanation}}" }
+</output>
+</example>{{end}}{{end}}
+Here's the profile you need to classify:
+{{.Profile}}

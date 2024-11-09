@@ -62,8 +62,8 @@ There are two ways to collaborate and improve the algorithm
 cd ~/git_bskylists
 git fetch origin
 git checkout origin/main
-cd ~/git_bsky
-make build
+cd ~/git_bskyctl
+#make build
 .build/bsctl apply ~/git_bskylists/aiengineering.yaml
 .build/bsctl apply ~/git_bskylists/platformengineering.yaml
 ```

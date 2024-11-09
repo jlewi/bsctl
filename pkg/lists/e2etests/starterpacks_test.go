@@ -43,12 +43,11 @@ func Test_GetStarterPacks(t *testing.T) {
 		t.Skipf("Test_StarterPacks is a manual test that is skipped in CICD")
 	}
 
-	stuff, err := testutil.testSetup()
+	stuff, err := testutil.New()
 	if err != nil {
 		t.Fatalf("testSetup() = %v, wanted nil", err)
 	}
-	// SHould be Chris Albon who has a starter pack
-	// actor := "did:plc:umpsiyampiq3bpgce7kigydz"
+
 	actor := jeremyLewiDid
 
 	out, err := lists.GetStarterPacks(stuff.Client, actor)

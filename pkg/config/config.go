@@ -54,6 +54,8 @@ type Config struct {
 	Password string `json:"password" yaml:"password"`
 	Prefix   string `json:"prefix" yaml:"prefix"`
 
+	OpenAI *OpenAIConfig `json:"openai,omitempty" yaml:"openai,omitempty"`
+
 	// configFile is the configuration file used
 	configFile string
 }
@@ -70,6 +72,14 @@ type LogSink struct {
 	// Path is the path to write logs to. Use "stderr" to write to stderr.
 	// Use gcplogs:///projects/${PROJECT}/logs/${LOGNAME} to write to Google Cloud Logging
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+}
+
+type OpenAIConfig struct {
+	// APIKeyFile is the path to the file containing the API key
+	APIKeyFile string `json:"apiKeyFile" yaml:"apiKeyFile"`
+
+	// BaseURL is the baseURL for the API.
+	BaseURL string `json:"baseURL" yaml:"baseURL"`
 }
 
 func (c *Config) GetLogLevel() string {
