@@ -56,17 +56,59 @@ There are two ways to collaborate and improve the algorithm
 
 4. Use bsctl to dump the keywords to stdout and then copy and past them into [Bluesky Feed Creator](https://blueskyfeedcreator.com/)
 
-## Commands For AIEngineering and PlatformEngineering
+## Identifying Community Members Algorithmically
 
-```bash {"id":"01JBTAGCHJ9H72SM46CHAPGPY3"}
-cd ~/git_bskylists
-git fetch origin
-git checkout origin/main
-cd ~/git_bskyctl
-#make build
-.build/bsctl apply ~/git_bskylists/aiengineering.yaml
-.build/bsctl apply ~/git_bskylists/platformengineering.yaml
+Rather than manually curating a list of handles, we can use algorithms to identify community members.
+The algorithm is very simple
+
+1. Take a set of seed handles
+1. Fetch the profile for everyone who **follows** those accounts
+1. Use an LLM to decide whether the profile satisfies some criterion
+
+To use this functionality define a `CommunityBuilder` resource in a YAML file like the one below.
+
+```yaml
+apiVersion: "bsctl.dev/v1alpha1"
+kind: "CommunityBuilder"
+metadata:
+    labels: {}
+    name: PlatformCommunity
+definition:
+    name: Platform Engineer
+    criterion:
+        - They are working on an internal developer platform
+        - They describe their job role as platform engineer, ml platform engineer, devops, infrastructure engineer or SRE
+        - They work with technologies used to build platforms; eg. kubernetes, cloud, argo
+        - They describe practices central to platform engineering; e.g. IAC, configuration, containers, gitops, cicd
+    examples:
+        - profile: I'm a platform engineer at acme.co
+          member: true
+          explanation: ""
+seeds:
+    - handle: kelseyhightower.com
+      did: ""
+outputFile: /Users/jlewi/git_bskylists//Users/jlewi/git_bskylists/kelseyhightower.followers.platformengineering.yaml
 ```
+
+* Everything in the `definition` section is used as input to the [LLM Prompt](https://github.com/jlewi/bsctl/blob/main/pkg/lists/profile_prompt.tmpl)
+* To perform the graph walk first configure your OpenAI APIKey
+  
+  ```
+  bsctl config set openai.apiKeyFile=/path/to/openai/apikey
+  ```
+
+* You can then perform the graph walk using the CLI
+
+  ```
+  bsctl apply /path/to/your/community.yaml
+  ```
+
+* This will write the results to the outputFile you specified
+* The output will contain an AccountList that tells you
+  1. Whether the account is a member of the community
+  1. A reason for the decision
+
+* For an example of the output see [kelseyhightower.followers.platformengineering.yaml]
 
 ## License
 

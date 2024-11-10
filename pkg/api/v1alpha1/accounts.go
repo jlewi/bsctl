@@ -26,12 +26,9 @@ type AccountList struct {
 	// include and exclude list.
 	Items []Membership `json:"items" yaml:"items"`
 
-	// TODO(jeremy): Get rid of this; use Accounts
+	// TODO(jeremy): This field is deprecated. We keep it in only to enable the tidy command to convert to the
+	// new format which uses Items.
 	Accounts []Account `json:"accounts,omitempty" yaml:"accounts,omitempty"`
-
-	// TODO(jeremy): Get rid of these fields
-	Members []Membership `json:"members,omitempty" yaml:"members,omitempty"`
-	Exclude []Membership `json:"exclude,omitempty" yaml:"exclude,omitempty"`
 }
 
 type Membership struct {

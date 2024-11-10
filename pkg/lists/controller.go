@@ -48,17 +48,6 @@ func (c *AccountListController) Tidy(ctx context.Context, l *v1alpha1.AccountLis
 		accounts[a.Handle] = m
 	}
 
-	for _, m := range l.Members {
-		m.Member = true
-		accounts[m.Account.Handle] = m
-	}
-
-	for _, m := range l.Exclude {
-		m.Member = true
-		m.Member = false
-		accounts[m.Account.Handle] = m
-	}
-
 	for _, m := range l.Items {
 		accounts[m.Account.Handle] = m
 	}
@@ -79,8 +68,6 @@ func (c *AccountListController) Tidy(ctx context.Context, l *v1alpha1.AccountLis
 	l.Items = members
 
 	l.Accounts = nil
-	l.Exclude = nil
-	l.Members = nil
 	return nil
 }
 

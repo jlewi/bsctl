@@ -76,11 +76,7 @@ func (g *GraphWalker) Reconcile(ctx context.Context, buildSpec *v1alpha1.Communi
 	}
 
 	// Add the list of seen accounts to the account list
-	for _, member := range accountList.Members {
-		seen[member.Account.Handle] = true
-	}
-
-	for _, member := range accountList.Exclude {
+	for _, member := range accountList.Items {
 		seen[member.Account.Handle] = true
 	}
 
@@ -121,8 +117,9 @@ func (g *GraphWalker) getFollowers(ctx context.Context, definition v1alpha1.Comm
 						DID:    f.Did,
 					},
 					Explanation: "The account has no profile description.",
+					Member:      false,
 				}
-				accountList.Exclude = append(accountList.Exclude, member)
+				accountList.Items = append(accountList.Items, member)
 				continue
 			}
 			prompt, err := buildPrompt(definition, *f.Description)
@@ -184,12 +181,10 @@ func (g *GraphWalker) getFollowers(ctx context.Context, definition v1alpha1.Comm
 					DID:    f.Did,
 				},
 				Explanation: output.Explanation,
+				Member:      output.Member,
 			}
-			if output.Member {
-				accountList.Members = append(accountList.Members, member)
-			} else {
-				accountList.Exclude = append(accountList.Exclude, member)
-			}
+
+			accountList.Items = append(accountList.Items, member)
 		}
 
 		if err := g.save(ctx, accountList, outputFile); err != nil {
