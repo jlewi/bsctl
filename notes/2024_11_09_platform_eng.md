@@ -41,17 +41,6 @@ yq ".items | length" /Users/jlewi/git_bskylists/platformengineering.yaml
 ../.build/bsctl apply /Users/jlewi/git_bskylists/platformengineering.yaml
 ```
 
-The error message indicates that the `merge` command is not recognized. This could be due to a few reasons, such as a typo in the command or the version of the `bsctl` tool not supporting the merge functionality.
-1. **Check available commands** to ensure that `merge` is a valid command in your current version:
-
-```bash
-
-```
-
-```bash
-
-```
-
-```bash
-
-```
+* Changes don't seem to be reflected in the blueskyfeed generator
+* Bluesky feed generator says it was last synced 22 hours ago
+  * Lets give it time to sync
