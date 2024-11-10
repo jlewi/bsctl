@@ -7,12 +7,13 @@ require (
 	github.com/bluesky-social/indigo v0.0.0-20240503174839-ef8e99bfcc76
 	github.com/fatih/color v1.16.0
 	github.com/go-logr/zapr v1.3.0
+	github.com/google/go-cmp v0.6.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/ipfs/go-cid v0.4.1
-	github.com/jlewi/goapp-template v0.0.0-20241024231018-3cd83e9d4465
 	github.com/jlewi/monogo v0.0.0-20240918030136-e0ca1337aea4
 	github.com/maxence-charriere/go-app/v9 v9.8.0
 	github.com/pkg/errors v0.9.1
+	github.com/sashabaranov/go-openai v1.32.5
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/urfave/cli/v2 v2.27.2
@@ -25,8 +26,11 @@ require (
 	cloud.google.com/go v0.112.1 // indirect
 	cloud.google.com/go/compute v1.24.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/logging v1.9.0 // indirect
 	cloud.google.com/go/longrunning v0.5.5 // indirect
+	cloud.google.com/go/secretmanager v1.11.5 // indirect
+	cloud.google.com/go/storage v1.38.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-cmd/cmd v1.4.1 // indirect
@@ -37,7 +41,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
@@ -82,13 +85,13 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/logr v1.4.1
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.5 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/arc/v2 v2.0.7 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect

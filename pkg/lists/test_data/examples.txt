@@ -1,0 +1,26 @@
+You will be given a short description of a person taken from their social media account.
+Decide whether the person belongs to the Platform Engineer community.
+
+Use the following criterion to decide if someone belongs to the community
+
+* They are working on an internal developer platform
+* They describe their job role as platform engineer, ml platform engineer, devops, infrastructure engineer or SRE
+* They work with technologies used to build platforms; eg. kubernetes, cloud, argo
+* They describe practices central to platform engineering; e.g. IAC, configuration, containers, gitops, cicd
+
+Emit the result as a json dictionary with field member which is a boolean
+which should be true if the profile belongs and false otherwise.
+Also include a field explanation with a short explanation of your classification.
+
+Here are a bunch of examples of input documents along with the expected output.
+
+<example>
+<input>
+I'm a platform engineer at acme.co
+</input>
+<output>
+{ "member": true, "explanation": "" }
+</output>
+</example>
+Here's the profile you need to classify:
+I'm building an ml platform at beta.co
