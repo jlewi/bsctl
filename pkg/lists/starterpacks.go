@@ -167,7 +167,7 @@ func MergeStarterPackToFile(client *xrpc.Client, sourceFile string, handle strin
 		return err
 	}
 
-	MergeFollowLists(dest, *output)
+	MergeFollowLists(dest, *output, IncludeMembers)
 
 	outB, err := yaml.Marshal(dest)
 	if err != nil {
@@ -203,7 +203,7 @@ func DumpStarterPack(client *xrpc.Client, actor string, name string) (*v1alpha1.
 	cursor := ""
 
 	result := &v1alpha1.AccountList{
-		Accounts: make([]v1alpha1.Account, 0),
+		Items: make([]v1alpha1.Membership, 0),
 	}
 	for {
 		output, err := bsky.GraphGetList(context.Background(), client, cursor, 100, starterPack.Record.List)
@@ -212,7 +212,10 @@ func DumpStarterPack(client *xrpc.Client, actor string, name string) (*v1alpha1.
 		}
 
 		for _, item := range output.Items {
-			result.Accounts = append(result.Accounts, v1alpha1.Account{Handle: item.Subject.Handle})
+			result.Items = append(result.Items, v1alpha1.Membership{
+				Account: v1alpha1.Account{
+					Handle: item.Subject.Handle,
+				}})
 		}
 
 		if output.Cursor == nil {

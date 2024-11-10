@@ -13,6 +13,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"os"
 	kYaml "sigs.k8s.io/kustomize/kyaml/yaml"
+	"strings"
 )
 
 type GraphWalker struct {
@@ -57,7 +58,10 @@ func (g *GraphWalker) Reconcile(ctx context.Context, buildSpec *v1alpha1.Communi
 	}
 
 	// Read the existing account list if one exists.
-	accountList := &v1alpha1.AccountList{}
+	accountList := &v1alpha1.AccountList{
+		APIVersion: v1alpha1.AccountListGVK.GroupVersion().String(),
+		Kind:       v1alpha1.AccountListKind,
+	}
 
 	contents, err := os.ReadFile(buildSpec.OutputFile)
 
@@ -110,7 +114,7 @@ func (g *GraphWalker) getFollowers(ctx context.Context, definition v1alpha1.Comm
 				continue
 			}
 
-			if f.Description == nil {
+			if f.Description == nil || strings.TrimSpace(*f.Description) == "" {
 				member := v1alpha1.Membership{
 					Account: v1alpha1.Account{
 						Handle: f.Handle,
@@ -170,7 +174,8 @@ func (g *GraphWalker) getFollowers(ctx context.Context, definition v1alpha1.Comm
 			output := &ClassifyOutput{}
 			if err := json.Unmarshal([]byte(choice.Message.Content), output); err != nil {
 				// TODO(jeremy): Should we just keep going? Will this happen for all users
-				return errors.Wrap(err, "Failed to unmarshal output")
+				log.Error(err, "ChatGPT's response is not valid JSON", "handle", f.Handle, "response", choice.Message.Content)
+				continue
 			}
 
 			member := v1alpha1.Membership{

@@ -128,13 +128,18 @@ func CreateListRecord(client *xrpc.Client, name string, description string) (*co
 
 func AddAllToList(client *xrpc.Client, listURI string, source v1alpha1.AccountList) error {
 	log := zapr.NewLogger(zap.L())
-	for _, h := range source.Accounts {
-		profile, err := bsky.ActorGetProfile(context.TODO(), client, h.Handle)
+	for _, m := range source.Items {
+
+		if !m.Member {
+			continue
+		}
+
+		profile, err := bsky.ActorGetProfile(context.TODO(), client, m.Account.Handle)
 		if err != nil {
 			var xErr *xrpc.Error
 			if errors.As(err, &xErr) {
 				if 400 == xErr.StatusCode {
-					log.Error(err, "Profile not found for handle", "handle", h)
+					log.Error(err, "Profile not found for handle", "handle", m.Account.Handle)
 					continue
 				}
 			}
@@ -193,19 +198,45 @@ func AddToList(client *xrpc.Client, listURI string, subjectDid string) error {
 //	})
 //}
 
-// MergeFollowLists computes the union of two lists
-func MergeFollowLists(dest *v1alpha1.AccountList, src v1alpha1.AccountList) {
-	// Use a map to store unique strings from both lists
-	uniqueStrings := make(map[string]bool)
+type ListFilter string
 
-	// Add elements from the first list to the map
-	for _, item := range dest.Accounts {
-		uniqueStrings[item.Handle] = true
-	}
+const (
+	// IncludeAll includes all members
+	IncludeAll ListFilter = "all"
+	// IncludeMembers includes items that are members; i.e. Membership.Member is true
+	IncludeMembers ListFilter = "members"
+	// IncludeNonMembers includes items that are members; i.e. Membership.Member is false
+	IncludeNonMembers ListFilter = "nonmembers"
+)
+
+// MergeFollowLists computes the union of two lists
+func MergeFollowLists(dest *v1alpha1.AccountList, src v1alpha1.AccountList, srcFilter ListFilter) {
+	// Use a map to store unique strings from both lists
+	uniqueStrings := map[string]v1alpha1.Membership{}
 
 	// Add elements from the second list to the map
-	for _, item := range src.Accounts {
-		uniqueStrings[item.Handle] = true
+	for _, item := range src.Items {
+		include := false
+		if srcFilter == IncludeAll {
+			include = true
+		}
+		if srcFilter == IncludeMembers && item.Member {
+			include = true
+		}
+		if srcFilter == IncludeNonMembers && !item.Member {
+			include = true
+		}
+		if !include {
+			continue
+		}
+		uniqueStrings[item.Account.Handle] = item
+	}
+
+	// Add elements from the dest list to the map
+	// By adding dest list after src list, we ensure that the value in dest list overrides the src list value if
+	// there are duplicates. I'm not sure if this is the desired behavior.
+	for _, item := range dest.Items {
+		uniqueStrings[item.Account.Handle] = item
 	}
 
 	// Convert map keys to a slice
@@ -217,9 +248,8 @@ func MergeFollowLists(dest *v1alpha1.AccountList, src v1alpha1.AccountList) {
 	// Sort the result slice
 	sort.Strings(result)
 
-	dest.Accounts = make([]v1alpha1.Account, 0, len(result))
+	dest.Items = make([]v1alpha1.Membership, 0, len(result))
 	for _, item := range result {
-		dest.Accounts = append(dest.Accounts, v1alpha1.Account{Handle: item})
+		dest.Items = append(dest.Items, uniqueStrings[item])
 	}
-
 }
