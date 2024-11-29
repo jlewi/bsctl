@@ -8,8 +8,11 @@ import (
 	"github.com/bluesky-social/indigo/xrpc"
 	"github.com/go-logr/zapr"
 	"github.com/jlewi/bsctl/pkg/config"
+	//"github.com/golang-jwt/jwt/v5/"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"time"
 )
 
 // XRPCManager is a struct that manages XRPC connections and requests.
@@ -80,5 +83,73 @@ func (m *XRPCManager) CreateClient(ctx context.Context) (*xrpc.Client, error) {
 		}
 	}
 
+	eTime, err := getExpirationTime(xrpcc.Auth.AccessJwt)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot get expiration time")
+	}
+
+	log.Info("Access token expiration time", "time", eTime)
 	return xrpcc, nil
 }
+
+func getExpirationTime(accessJwt string) (time.Time, error) {
+	eTime := time.Unix(0, 0)
+
+	// Parse the JWT
+	token, err := jwt.Parse([]byte(accessJwt), jwt.WithVerify(false))
+	if err != nil {
+		return eTime, errors.Wrapf(err, "cannot parse JWT")
+	}
+	//
+	//parser := jwt.NewParser(jwt.WithoutClaimsValidation(), jwt.WithJSONNumber())
+	//
+	//parser.Parse(accessJwt)
+	//// Parse the token
+	//token, _, err := parser.ParseUnverified(accessJwt, jwt.MapClaims{})
+	//if err != nil {
+	//	return eTime, err
+	//}
+
+	// Extract claims
+	return token.Expiration(), nil
+	//claims, ok := token.Claims.(jwt.MapClaims)
+	//if !ok {
+	//	return eTime, errors.New("invalid token claims")
+	//}
+	//
+	//// Get expiration time
+	//exp, ok := claims["exp"].(float64)
+	//if !ok {
+	//	return eTime, errors.New("invalid expiration claim")
+	//}
+	//
+	//// Compare expiration time with current time
+	//expirationTime := time.Unix(int64(exp), 0)
+	//return expirationTime, nil
+}
+
+//
+//func isAccessJwtExpired(accessJwt string) (bool, error) {
+//	// Parse the token
+//	token, _, err := new(jwt.Parser).ParseUnverified(accessJwt, jwt.MapClaims{})
+//	if err != nil {
+//		return false, err
+//	}
+//
+//	// Extract claims
+//	claims, ok := token.Claims.(jwt.MapClaims)
+//	if !ok {
+//		return false, fmt.Errorf("invalid token claims")
+//	}
+//
+//	// Get expiration time
+//	exp, ok := claims["exp"].(float64)
+//	if !ok {
+//		return false, fmt.Errorf("invalid expiration claim")
+//	}
+//
+//	// Compare expiration time with current time
+//	expirationTime := time.Unix(int64(exp), 0)
+//	return time.Now().After(expirationTime), nil
+//}

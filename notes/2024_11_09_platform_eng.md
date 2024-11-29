@@ -43,4 +43,60 @@ yq ".items | length" /Users/jlewi/git_bskylists/platformengineering.yaml
 
 * Changes don't seem to be reflected in the blueskyfeed generator
 * Bluesky feed generator says it was last synced 22 hours ago
-  * Lets give it time to sync
+   * Lets give it time to sync
+
+```bash
+yq '[(.items[] | select(.member == true))] | length' ~/git_bskylists/kelseyhightower.followers.platformengineering.yaml
+```
+
+## Lets find my followers
+
+```bash {"id":"01JC9XTX3AT7XEVS6AZ752NWYT"}
+../.build/bsctl apply /Users/jlewi/git_bskylists/jeremylewi.followers.communitybuilder.yaml
+```
+
+# Lets merge in my followers
+
+```bash
+yq ".items | length" /Users/jlewi/git_bskylists/platformengineering.yaml
+```
+
+```bash {"id":"01JCAAJ0SKBKGC48KQAQ0YXKAF"}
+../.build/bsctl merge --dest=/Users/jlewi/git_bskylists/platformengineering.yaml \
+  --source=/Users/jlewi/git_bskylists/jeremylewi.followers.platformengineering.yaml \
+  --source-filter=members
+```
+
+```bash
+yq ".items | length" /Users/jlewi/git_bskylists/platformengineering.yaml
+```
+
+Looks like that didn't add any members so looks like everyone who's following me that's a platform engineer is already there
+
+* How many platform engineers do I have following me
+
+```bash {"id":"01JCAAMYQ15YRFHYP6BM4NQRG9"}
+yq '[(.items[] | select(.member == true))] | length' /Users/jlewi/git_bskylists/jeremylewi.followers.platformengineering.yaml
+```
+
+I only have 15 followers that are in the platform engineering community
+
+* Lets get there handles
+
+```bash {"id":"01JCAARBRD24KE09A44MS3A2Q0"}
+yq '(.items[] | select(.member == true)) | .account.handle' /Users/jlewi/git_bskylists/jeremylewi.followers.platformengineering.yaml
+```
+
+## Lets redo my followers
+
+* I've picked up a bunch in the base couple hours
+
+```bash
+../.build/bsctl apply /Users/jlewi/git_bskylists/jeremylewi.followers.communitybuilder.yaml
+```
+
+* So now I have 18 as opposed to 15 followers that meet the criterion.
+
+```bash
+
+```
