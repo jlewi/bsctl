@@ -23,6 +23,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(NewConfigCmd())
 	rootCmd.AddCommand(NewApplyCmd())
 	rootCmd.AddCommand(NewDumpCmd())
+	rootCmd.AddCommand(NewDumpListCmd())
 	rootCmd.AddCommand(NewMergeCmd())
 	rootCmd.AddCommand(NewTidyCmd())
 	rootCmd.AddCommand(NewDumpStarterPack())
