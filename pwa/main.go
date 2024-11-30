@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/go-logr/zapr"
 	"github.com/jlewi/bsctl/pkg"
-	"github.com/jlewi/bsctl/pkg/application"
 	"github.com/jlewi/bsctl/pkg/version"
+	"github.com/jlewi/bsctl/pkg/xcomm"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -26,7 +26,7 @@ type CommandApp struct {
 	app.Compo
 	commands []string
 	input    string
-	manager  *application.XRPCManager
+	manager  *xcomm.XRPCManager
 }
 
 func (a *CommandApp) Render() app.UI {
@@ -338,7 +338,7 @@ func (a *CommandApp) getConfig(ctx app.Context) (*pkg.Config, error) {
 	return cfg, nil
 }
 
-func (a *CommandApp) getXRPCManager(ctx app.Context) (*application.XRPCManager, error) {
+func (a *CommandApp) getXRPCManager(ctx app.Context) (*xcomm.XRPCManager, error) {
 	if a.manager != nil {
 		return a.manager, nil
 	}
@@ -359,8 +359,8 @@ func (a *CommandApp) getXRPCManager(ctx app.Context) (*application.XRPCManager, 
 		return nil, errors.New("password not set. Run config set password=password to set it")
 	}
 
-	m := application.XRPCManager{
-		AuthManager: &application.AuthLocalStorage{
+	m := xcomm.XRPCManager{
+		AuthManager: &xcomm.AuthLocalStorage{
 			Ctx: ctx,
 		},
 		Config: cfg,

@@ -1,4 +1,4 @@
-package application
+package xcomm
 
 import (
 	"context"
@@ -16,9 +16,15 @@ import (
 )
 
 // XRPCManager is a struct that manages XRPC connections and requests.
+//
+// It is primarily responsible for fetching and refreshing credentials.
+// TODO(jeremy): Is there a better pattern for hanadling credential refreshing? Could we use
+// a RoundTripper?
 type XRPCManager struct {
-	AuthManager AuthManager
-	Config      *config.Config
+	AuthManager    AuthManager
+	Config         *config.Config
+	client         *xrpc.Client
+	expirationTime time.Time
 }
 
 // CreateClient creates a new XRPC client. It fetches credentials if needed.
@@ -36,6 +42,11 @@ func (m *XRPCManager) CreateClient(ctx context.Context) (*xrpc.Client, error) {
 
 	if m.Config.Password == "" {
 		return nil, errors.New("password not set")
+	}
+
+	// If we already have a client just return it
+	if m.client != nil && time.Now().Before(m.expirationTime) {
+		return m.client, nil
 	}
 
 	log.Info("Creating XRPC Client")
@@ -64,6 +75,7 @@ func (m *XRPCManager) CreateClient(ctx context.Context) (*xrpc.Client, error) {
 			}
 		}
 	}
+
 	if err != nil || (xrpcc.Auth.AccessJwt == "" || xrpcc.Auth.RefreshJwt == "") {
 		log.Info("Auth not found, creating new session")
 		auth, err := comatproto.ServerCreateSession(context.TODO(), xrpcc, &comatproto.ServerCreateSession_Input{
@@ -90,6 +102,9 @@ func (m *XRPCManager) CreateClient(ctx context.Context) (*xrpc.Client, error) {
 	}
 
 	log.Info("Access token expiration time", "time", eTime)
+	m.client = xrpcc
+	// Subtract 1 minute from the duration to give us some time.
+	m.expirationTime = eTime.Add(-1 * time.Minute)
 	return xrpcc, nil
 }
 
@@ -101,55 +116,7 @@ func getExpirationTime(accessJwt string) (time.Time, error) {
 	if err != nil {
 		return eTime, errors.Wrapf(err, "cannot parse JWT")
 	}
-	//
-	//parser := jwt.NewParser(jwt.WithoutClaimsValidation(), jwt.WithJSONNumber())
-	//
-	//parser.Parse(accessJwt)
-	//// Parse the token
-	//token, _, err := parser.ParseUnverified(accessJwt, jwt.MapClaims{})
-	//if err != nil {
-	//	return eTime, err
-	//}
 
 	// Extract claims
 	return token.Expiration(), nil
-	//claims, ok := token.Claims.(jwt.MapClaims)
-	//if !ok {
-	//	return eTime, errors.New("invalid token claims")
-	//}
-	//
-	//// Get expiration time
-	//exp, ok := claims["exp"].(float64)
-	//if !ok {
-	//	return eTime, errors.New("invalid expiration claim")
-	//}
-	//
-	//// Compare expiration time with current time
-	//expirationTime := time.Unix(int64(exp), 0)
-	//return expirationTime, nil
 }
-
-//
-//func isAccessJwtExpired(accessJwt string) (bool, error) {
-//	// Parse the token
-//	token, _, err := new(jwt.Parser).ParseUnverified(accessJwt, jwt.MapClaims{})
-//	if err != nil {
-//		return false, err
-//	}
-//
-//	// Extract claims
-//	claims, ok := token.Claims.(jwt.MapClaims)
-//	if !ok {
-//		return false, fmt.Errorf("invalid token claims")
-//	}
-//
-//	// Get expiration time
-//	exp, ok := claims["exp"].(float64)
-//	if !ok {
-//		return false, fmt.Errorf("invalid expiration claim")
-//	}
-//
-//	// Compare expiration time with current time
-//	expirationTime := time.Unix(int64(exp), 0)
-//	return time.Now().After(expirationTime), nil
-//}
