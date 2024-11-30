@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/bluesky-social/indigo/api/bsky"
-	"github.com/bluesky-social/indigo/xrpc"
 	"github.com/jlewi/bsctl/pkg/api/v1alpha1"
 	"github.com/jlewi/bsctl/pkg/util"
+	"github.com/jlewi/bsctl/pkg/xcomm"
 	"github.com/pkg/errors"
 	"github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
@@ -17,7 +17,7 @@ import (
 )
 
 type GraphWalker struct {
-	xClient *xrpc.Client
+	manager *xcomm.XRPCManager
 	oClient *openai.Client
 }
 
@@ -39,9 +39,9 @@ type ClassifyOutput struct {
 	Explanation string `json:"explanation"`
 }
 
-func NewWalker(xClient *xrpc.Client, oClient *openai.Client) (*GraphWalker, error) {
+func NewWalker(manager *xcomm.XRPCManager, oClient *openai.Client) (*GraphWalker, error) {
 	return &GraphWalker{
-		xClient: xClient,
+		manager: manager,
 		oClient: oClient,
 	}, nil
 }
@@ -96,10 +96,14 @@ func (g *GraphWalker) getFollowers(ctx context.Context, definition v1alpha1.Comm
 	log := util.LogFromContext(ctx)
 	for {
 
+		client, err := g.manager.CreateClient(ctx)
+		if err != nil {
+			return errors.Wrapf(err, "Failed to create client")
+		}
 		// Limit controls how often we persist the results to a file since we persist the results after processing
 		// each batch of followers
 		limit := int64(50)
-		followers, err := bsky.GraphGetFollowers(context.TODO(), g.xClient, handle, cursor, limit)
+		followers, err := bsky.GraphGetFollowers(context.TODO(), client, handle, cursor, limit)
 		if err != nil {
 			return errors.Wrapf(err, "getting followers for handle %s", handle)
 		}

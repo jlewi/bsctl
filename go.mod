@@ -7,6 +7,7 @@ require (
 	github.com/bluesky-social/indigo v0.0.0-20240503174839-ef8e99bfcc76
 	github.com/fatih/color v1.16.0
 	github.com/go-logr/zapr v1.3.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/go-cmp v0.6.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/ipfs/go-cid v0.4.1

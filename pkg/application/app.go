@@ -11,6 +11,7 @@ import (
 	"github.com/jlewi/bsctl/pkg/lists"
 	"github.com/jlewi/bsctl/pkg/oai"
 	"github.com/jlewi/bsctl/pkg/util"
+	"github.com/jlewi/bsctl/pkg/xcomm"
 	"github.com/jlewi/monogo/gcp/logging"
 	"github.com/jlewi/monogo/helpers"
 	"github.com/pkg/errors"
@@ -28,6 +29,7 @@ import (
 type App struct {
 	Config   *config.Config
 	Registry *controllers.Registry
+	Manager  *xcomm.XRPCManager
 }
 
 // NewApp creates a new application. You should call one more setup/Load functions to properly set it up.
@@ -122,7 +124,7 @@ func (a *App) SetupRegistry() error {
 	if err != nil {
 		return errors.Wrapf(err, "Failed to create OAI client")
 	}
-	walker, err := lists.NewWalker(client, oaiClient)
+	walker, err := lists.NewWalker(a.Manager, oaiClient)
 	if err != nil {
 		return err
 	}
@@ -299,19 +301,20 @@ func (a *App) GetXRPCClient() (*xrpc.Client, error) {
 		return nil, err
 	}
 
-	m := &XRPCManager{
+	m := &xcomm.XRPCManager{
 		Config:      a.Config,
 		AuthManager: authM,
 	}
 
+	a.Manager = m
 	return m.CreateClient(context.Background())
 }
 
-func (a *App) GetAuthManager() (AuthManager, error) {
+func (a *App) GetAuthManager() (xcomm.AuthManager, error) {
 	if a.Config == nil {
 		return nil, errors.WithStack(errors.New("Config is nil; call LoadConfig first"))
 	}
-	m := &AuthLocalFile{
+	m := &xcomm.AuthLocalFile{
 		Path: a.Config.GetAuthFile(),
 	}
 	return m, nil

@@ -12,6 +12,9 @@ import (
 	"github.com/jlewi/bsctl/pkg/api/v1alpha1"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
+	"os"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sort"
 	"time"
 )
@@ -252,4 +255,71 @@ func MergeFollowLists(dest *v1alpha1.AccountList, src v1alpha1.AccountList, srcF
 	for _, item := range result {
 		dest.Items = append(dest.Items, uniqueStrings[item])
 	}
+}
+
+// MergeListToFile merges the users in a list to file.
+func MergeListToFile(client *xrpc.Client, sourceFile string, listURI string) error {
+	b, err := os.ReadFile(sourceFile)
+	if err != nil && !os.IsNotExist(err) {
+		return errors.Wrapf(err, "cannot read file %s", sourceFile)
+	}
+
+	dest := &v1alpha1.AccountList{}
+	if err == nil {
+		nodes, err := kio.FromBytes(b)
+		if err != nil {
+			return errors.Wrapf(err, "cannot read file %s", sourceFile)
+		}
+
+		node := nodes[0]
+
+		if err := node.YNode().Decode(dest); err != nil {
+			return errors.Wrapf(err, "cannot unmarshal AccountList from file %s", sourceFile)
+		}
+	}
+	output, err := DumpList(client, listURI)
+	if err != nil {
+		return err
+	}
+
+	MergeFollowLists(dest, *output, IncludeAll)
+
+	outB, err := yaml.Marshal(dest)
+	if err != nil {
+		return errors.Wrapf(err, "cannot marshal AccountList to file %s", sourceFile)
+	}
+
+	if err := os.WriteFile(sourceFile, outB, 0644); err != nil {
+		return errors.Wrapf(err, "cannot write file %s", sourceFile)
+	}
+	return nil
+}
+
+// DumpList dumps the list
+func DumpList(client *xrpc.Client, listUri string) (*v1alpha1.AccountList, error) {
+	// Get the list
+	cursor := ""
+
+	result := &v1alpha1.AccountList{
+		Items: make([]v1alpha1.Membership, 0),
+	}
+	for {
+		output, err := bsky.GraphGetList(context.Background(), client, cursor, 100, listUri)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Failed to get list associated with the starter pack")
+		}
+
+		for _, item := range output.Items {
+			result.Items = append(result.Items, v1alpha1.Membership{
+				Account: v1alpha1.Account{
+					Handle: item.Subject.Handle,
+				}})
+		}
+
+		if output.Cursor == nil {
+			break
+		}
+		cursor = *output.Cursor
+	}
+	return result, nil
 }

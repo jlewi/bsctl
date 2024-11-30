@@ -1,4 +1,4 @@
-package application
+package xcomm
 
 import (
 	"encoding/json"
